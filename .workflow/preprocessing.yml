@@ -1,0 +1,38 @@
+name: Automated Data Preprocessing Workflow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-node-version: '3.12'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas numpy scikit-learn
+
+    # 4. Jalankan file otomasi python yang berada di dalam folder preprocessing
+    - name: Run Preprocessing Script
+      run: |
+        python preprocessing/automate_syuhadaaqlulhafiz.py
+
+    # 5. Simpan dan Commit kembali dataset hasil proses ke repository agar terupdate otomatis
+    - name: Commit and Push Preprocessed Data
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add JobDataset/jobs_dataset/*.csv
+        git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Auto-updated preprocessed dataset via GitHub Actions" && git push)
