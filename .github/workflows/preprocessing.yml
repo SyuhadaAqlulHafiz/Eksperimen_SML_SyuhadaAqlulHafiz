@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+# Mencegah workflow berjalan bersamaan dan bikin bentrok
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   preprocess:
     runs-on: ubuntu-latest
@@ -13,11 +18,14 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
+      with:
+        # Mengambil riwayat git secara penuh agar proses pull/rebase berjalan lancar
+        fetch-depth: 0 
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.12' # Diperbaiki dari python-node-version
+        python-version: '3.12'
 
     - name: Install Dependencies
       run: |
@@ -29,10 +37,19 @@ jobs:
       run: |
         python preprocessing/automate_syuhadaaqlulhafiz.py
 
-    # 5. Commit kembali file "JobDataset_preprocessed.csv" yang ada di folder preprocessing
+    # 5. Commit kembali file "JobDataset_preprocessed.csv"
     - name: Commit and Push Preprocessed Data
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add preprocessing/JobDataset_preprocessed.csv
-        git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Auto-updated preprocessed dataset via GitHub Actions" && git push)
+        
+        # Cek jika ada perubahan, lakukan commit, pull rebase baru push
+        if ! git diff --quiet || ! git diff --staged --quiet; then
+          git commit -m "🤖 Auto-updated preprocessed dataset via GitHub Actions"
+          
+          # AMBIL PERUBAHAN TERBARU DULU AGAR TIDAK REJECTED
+          git pull origin main --rebase
+          
+          git push origin main
+        fi
