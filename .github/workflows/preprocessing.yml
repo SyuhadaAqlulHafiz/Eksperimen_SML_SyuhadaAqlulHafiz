@@ -17,22 +17,22 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-node-version: '3.12'
+        python-version: '3.12' # Diperbaiki dari python-node-version
 
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pandas numpy scikit-learn
 
-    # 4. Jalankan file otomasi python yang berada di dalam folder preprocessing
+    # 4. Menjalankan file otomasi python
     - name: Run Preprocessing Script
       run: |
         python preprocessing/automate_syuhadaaqlulhafiz.py
 
-    # 5. Simpan dan Commit kembali dataset hasil proses ke repository agar terupdate otomatis
+    # 5. Commit kembali file "JobDataset_preprocessed.csv" yang ada di folder preprocessing
     - name: Commit and Push Preprocessed Data
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add JobDataset/jobs_dataset/*.csv
+        git add preprocessing/JobDataset_preprocessed.csv
         git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Auto-updated preprocessed dataset via GitHub Actions" && git push)
